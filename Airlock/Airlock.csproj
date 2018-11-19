@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
   <PropertyGroup>
@@ -42,14 +42,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AirlockGame.cs" />
+    <Compile Include="Client\AirlockClient.cs" />
     <Compile Include="Map\MapGrid.cs" />
     <Compile Include="Map\MapRoom.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\Drawing.cs" />
+    <Compile Include="Render\Camera.cs" />
+    <Compile Include="Render\Drawing.cs" />
+    <Compile Include="Server\AirlockClient.cs" />
+    <Compile Include="Server\AirlockServer.cs" />
+    <Compile Include="Server\ClientDeclaration.cs" />
     <Compile Include="Util\Fmath.cs" />
+    <Compile Include="Util\ListExtentions.cs" />
     <Compile Include="Util\NetcodeFields.cs" />
-    <Compile Include="Util\Point.cs" />
+    <Compile Include="Util\VectorBox.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

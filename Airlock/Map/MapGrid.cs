@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Xna.Framework;
+using Airlock.Render;
 using Airlock.Util;
 using NetCode;
 
@@ -11,11 +13,26 @@ namespace Airlock.Map
 {
     public class MapGrid
     {
-        public Point Size { get; private set; }
+        public List<MapRoom> Rooms;
 
-        public MapGrid(Point size)
+        public MapGrid()
         {
-            Size = size;
+            Rooms = new List<MapRoom>();
+        }
+
+        public static MapGrid StartingMap()
+        {
+            MapGrid grid = new MapGrid();
+            grid.Rooms.Add(new MapRoom( new Point(0,0), new Point(1,1) ));
+            return grid;
+        }
+
+        public void Render(Camera camera)
+        {
+            foreach(MapRoom room in Rooms)
+            {
+                room.Render(camera);
+            }
         }
     }
 }

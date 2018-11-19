@@ -1,6 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Net;
+
+using Airlock.Util;
+using Airlock.Server;
+using Airlock.Client;
+using Airlock.Render;
+using System;
 
 namespace Airlock
 {
@@ -11,11 +18,19 @@ namespace Airlock
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        
+        AirlockServer Server;
+        AirlockClient Client;
+        Camera Camera;
+        Point Resolution = new Point(800, 600);
 
         public AirlockGame()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            graphics.PreferredBackBufferWidth = Resolution.X;
+            graphics.PreferredBackBufferHeight = Resolution.Y;
         }
 
         /// <summary>
@@ -26,8 +41,6 @@ namespace Airlock
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
             base.Initialize();
         }
 
@@ -37,10 +50,12 @@ namespace Airlock
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
+            Drawing.Load(Content);
+            
+            Server = new AirlockServer(11002);
+            Client = new AirlockClient(IPAddress.Parse("127.0.0.1"), 11002, 11003);
+            Camera = new Camera(spriteBatch, Resolution.ToVector2());
         }
 
         /// <summary>
@@ -49,7 +64,6 @@ namespace Airlock
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
         }
 
         /// <summary>
@@ -62,7 +76,10 @@ namespace Airlock
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            double elapsed = gameTime.ElapsedGameTime.TotalSeconds;
+
+            Server.Update(elapsed);
+            Client.Update(elapsed);
 
             base.Update(gameTime);
         }
@@ -73,9 +90,11 @@ namespace Airlock
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
-            // TODO: Add your drawing code here
+            Camera.Batch.Begin();
+            Client.Render(Camera);
+            Camera.Batch.End();
 
             base.Draw(gameTime);
         }
