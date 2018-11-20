@@ -14,6 +14,8 @@ namespace Airlock.Map
     [EnumerateSynchEntity]
     public class MapRoom
     {
+        public const int WallSize = 4;
+
         [Synchronisable]
         public Point Origin { get; private set; }
         [Synchronisable]
@@ -32,7 +34,7 @@ namespace Airlock.Map
 
         public void Render(Camera camera)
         {
-            Drawing.DrawSquare(camera.Batch, camera.Map(Center), Size.ToVector2() * camera.Scale, 0, Color.LightGray);
+            Drawing.DrawSquare(camera.Batch, camera.Map(Center * MapGrid.TileSize), (Size.ToVector2() * MapGrid.TileSize * camera.Scale) - new Vector2(WallSize * 2), 0, Color.LightGray);
         }
     }
 }

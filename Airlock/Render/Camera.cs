@@ -21,13 +21,13 @@ namespace Airlock.Render
 
         public Camera(SpriteBatch batch, Vector2 resolution)
         {
-            Scale = 100f;
+            Scale = 1f;
             Resolution = resolution;
             Batch = batch;
 
             Move(new Vector2(0, 0));
         }
-
+        
         public Vector2 Map(Vector2 point)
         {
             return (point + MappingOrigin) * Scale;

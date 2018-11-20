@@ -22,12 +22,13 @@ namespace Airlock
         AirlockServer Server;
         AirlockClient Client;
         Camera Camera;
-        Point Resolution = new Point(800, 600);
+        Point Resolution = new Point(1280, 800);
 
         public AirlockGame()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            IsMouseVisible = true;
 
             graphics.PreferredBackBufferWidth = Resolution.X;
             graphics.PreferredBackBufferHeight = Resolution.Y;
@@ -66,6 +67,8 @@ namespace Airlock
         {
         }
 
+        private double LastUpdateTime = 0.0f;
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -73,11 +76,15 @@ namespace Airlock
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            double now = NetCode.NetTime.Seconds();
+            double elapsed = now - LastUpdateTime;
+            LastUpdateTime = now;
+            
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            {
                 Exit();
-
-            double elapsed = gameTime.ElapsedGameTime.TotalSeconds;
-
+            }
+            
             Server.Update(elapsed);
             Client.Update(elapsed);
 
@@ -92,7 +99,7 @@ namespace Airlock
         {
             GraphicsDevice.Clear(Color.Black);
 
-            Camera.Batch.Begin();
+            Camera.Batch.Begin(samplerState: SamplerState.PointClamp);
             Client.Render(Camera);
             Camera.Batch.End();
 

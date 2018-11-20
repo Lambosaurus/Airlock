@@ -13,17 +13,22 @@ namespace Airlock.Map
 {
     public class MapGrid
     {
+        public const int TileSize = 80;
         public List<MapRoom> Rooms;
-
+        
         public MapGrid()
         {
             Rooms = new List<MapRoom>();
         }
-
+        
         public static MapGrid StartingMap()
         {
             MapGrid grid = new MapGrid();
-            grid.Rooms.Add(new MapRoom( new Point(0,0), new Point(1,1) ));
+            grid.Rooms.Add(new MapRoom(new Point(-4, -2), new Point(3, 4)));
+            grid.Rooms.Add(new MapRoom(new Point(0, 0), new Point(2, 2)));
+            grid.Rooms.Add(new MapRoom(new Point(-1, 0), new Point(1, 1)));
+            grid.Rooms.Add(new MapRoom(new Point(1, -3), new Point(1, 3)));
+            grid.Rooms.Add(new MapRoom(new Point(2, -4), new Point(3, 3)));
             return grid;
         }
 
