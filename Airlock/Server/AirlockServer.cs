@@ -9,6 +9,7 @@ using NetCode.SyncPool;
 
 using Airlock.Util;
 using Airlock.Map;
+using Airlock.Entities;
 
 namespace Airlock.Server
 {
@@ -27,6 +28,7 @@ namespace Airlock.Server
         private NetDefinitions NetDefs;
 
         private MapGrid Grid;
+        public List<Unit> Units;
         
         public AirlockServer( int port )
         {
@@ -38,6 +40,7 @@ namespace Airlock.Server
             NetDefs.LoadEntityTypes();
             MapContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.MapContent);
 
+            Units = new List<Unit>();
             Grid = MapGrid.StartingMap();
 
             foreach (MapRoom room in Grid.Rooms)
@@ -46,8 +49,25 @@ namespace Airlock.Server
             }
         }
 
+        public void AddUnit(Unit unit)
+        {
+            Units.Add(unit);
+            MapContent.RegisterEntity(unit);
+        }
+
+        public void RemoveUnit(Unit unit)
+        {
+            Units.Remove(unit);
+            MapContent.GetHandleByObject(unit).State = SyncHandle.SyncState.Deleted;
+        }
+
         public void Update( double elapsed )
         {
+            foreach ( Unit unit in Units )
+            {
+                unit.Update();
+            }
+
             UDPFeed newFeed = Server.RecieveConnection();
             if (newFeed != null)
             {
@@ -83,12 +103,23 @@ namespace Airlock.Server
         private void AddClient(AirlockHostedClient client)
         {
             client.Network.Attach(MapContent);
+
+            UnitPlayer player = new UnitPlayer();
+            client.SpawnPlayer(player);
+            AddUnit(player);
+
             Clients.Add(client);
         }
 
         private void DropClient(AirlockHostedClient client)
         {
             client.Close();
+
+            if (client.Player != null)
+            {
+                RemoveUnit(client.Player);
+            }
+
             Clients.Remove(client);
         }
 

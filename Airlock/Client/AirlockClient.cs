@@ -7,6 +7,7 @@ using System.Net;
 
 using Airlock.Map;
 using Airlock.Render;
+using Airlock.Entities;
 
 namespace Airlock.Client
 {
@@ -54,6 +55,10 @@ namespace Airlock.Client
                 if (handle.Obj is MapRoom room)
                 {
                     room.Render(camera);
+                }
+                if (handle.Obj is Unit unit)
+                {
+                    unit.Render(camera);
                 }
             }
         }

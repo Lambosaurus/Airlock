@@ -21,8 +21,12 @@ namespace Airlock
         
         AirlockServer Server;
         AirlockClient Client;
-        Camera Camera;
-        Point Resolution = new Point(1280, 800);
+        Camera WorldCamera;
+        Point Resolution;
+        AirlockSettings Settings;
+
+        private double LastUpdateTime = 0.0f;
+        KeyboardState LastKeys;
 
         public AirlockGame()
         {
@@ -30,6 +34,8 @@ namespace Airlock
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
+            Settings = new AirlockSettings();
+            Resolution = new Point(Settings.ResolutionX, Settings.ResolutionY);
             graphics.PreferredBackBufferWidth = Resolution.X;
             graphics.PreferredBackBufferHeight = Resolution.Y;
         }
@@ -56,7 +62,9 @@ namespace Airlock
             
             Server = new AirlockServer(11002);
             Client = new AirlockClient(IPAddress.Parse("127.0.0.1"), 11002, 11003);
-            Camera = new Camera(spriteBatch, Resolution.ToVector2());
+            WorldCamera = new Camera(spriteBatch, Resolution.ToVector2());
+            
+            LastKeys = Keyboard.GetState();
         }
 
         /// <summary>
@@ -67,7 +75,7 @@ namespace Airlock
         {
         }
 
-        private double LastUpdateTime = 0.0f;
+        
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -79,15 +87,19 @@ namespace Airlock
             double now = NetCode.NetTime.Seconds();
             double elapsed = now - LastUpdateTime;
             LastUpdateTime = now;
-            
+            KeyboardState keys = Keyboard.GetState();
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
+                Server.Close();
+                Client.Close();
                 Exit();
             }
             
             Server.Update(elapsed);
             Client.Update(elapsed);
-
+            
+            LastKeys = keys;
             base.Update(gameTime);
         }
 
@@ -99,9 +111,9 @@ namespace Airlock
         {
             GraphicsDevice.Clear(Color.Black);
 
-            Camera.Batch.Begin(samplerState: SamplerState.PointClamp);
-            Client.Render(Camera);
-            Camera.Batch.End();
+            WorldCamera.Batch.Begin(samplerState: SamplerState.PointClamp);
+            Client.Render(WorldCamera);
+            WorldCamera.Batch.End();
 
             base.Draw(gameTime);
         }

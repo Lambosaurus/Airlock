@@ -25,7 +25,7 @@ namespace Airlock.Render
             Resolution = resolution;
             Batch = batch;
 
-            Move(new Vector2(0, 0));
+            SetPosition(new Vector2(0, 0));
         }
         
         public Vector2 Map(Vector2 point)
@@ -40,10 +40,10 @@ namespace Airlock.Render
 
         protected void BuildMap()
         {
-            MappingOrigin = (Position + (Resolution / 2f)) / Scale;
+            MappingOrigin = ((Resolution / 2f) - Position) / Scale;
         }
 
-        private void Move(Vector2 pos)
+        public void SetPosition(Vector2 pos)
         {
             Position = pos;
             BuildMap();
