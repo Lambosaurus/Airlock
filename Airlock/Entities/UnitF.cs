@@ -12,6 +12,7 @@ namespace Airlock.Entities
     {
         [Synchronisable]
         public Vector2 Position { get; protected set; }
+        public float Radius { get; protected set; }
 
         public abstract void Render(Camera camera);
 
