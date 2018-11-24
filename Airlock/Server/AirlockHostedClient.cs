@@ -7,6 +7,7 @@ using NetCode.SyncPool;
 using NetCode.Connection;
 
 using Airlock.Entities;
+using Airlock.Client;
 
 namespace Airlock.Server
 {
@@ -34,6 +35,14 @@ namespace Airlock.Server
         {
             Network.Update();
             ClientContent.Synchronise();
+
+            foreach (SyncHandle handle in ClientContent.Handles)
+            {
+                if (handle.Obj is PlayerMotionRequest request)
+                {
+                    Player.SetPosition(request.Position);
+                }
+            }
         }
 
         public void Close()

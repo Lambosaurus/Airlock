@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 using NetCode;
 using NetCode.Connection;
@@ -28,7 +29,7 @@ namespace Airlock.Server
         private NetDefinitions NetDefs;
 
         private MapGrid Grid;
-        public List<Unit> Units;
+        public List<Entity> Units;
         
         public AirlockServer( int port )
         {
@@ -40,32 +41,32 @@ namespace Airlock.Server
             NetDefs.LoadEntityTypes();
             MapContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.MapContent);
 
-            Units = new List<Unit>();
+            Units = new List<Entity>();
             Grid = MapGrid.StartingMap();
 
             foreach (MapRoom room in Grid.Rooms)
             {
-                MapContent.RegisterEntity(room);
+                MapContent.AddEntity(room);
             }
         }
 
-        public void AddUnit(Unit unit)
+        public void AddUnit(Entity unit)
         {
             Units.Add(unit);
-            MapContent.RegisterEntity(unit);
+            MapContent.AddEntity(unit);
         }
 
-        public void RemoveUnit(Unit unit)
+        public void RemoveUnit(Entity unit)
         {
             Units.Remove(unit);
             MapContent.GetHandleByObject(unit).State = SyncHandle.SyncState.Deleted;
         }
 
-        public void Update( double elapsed )
+        public void Update( float elapsed )
         {
-            foreach ( Unit unit in Units )
+            foreach (Entity unit in Units )
             {
-                unit.Update();
+                unit.Update(elapsed);
             }
 
             UDPFeed newFeed = Server.RecieveConnection();
@@ -104,7 +105,7 @@ namespace Airlock.Server
         {
             client.Network.Attach(MapContent);
 
-            UnitPlayer player = new UnitPlayer();
+            UnitPlayer player = new UnitPlayer( new Vector2(0,0));
             client.SpawnPlayer(player);
             AddUnit(player);
 

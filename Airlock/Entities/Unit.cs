@@ -1,24 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Airlock.Render;
 using Microsoft.Xna.Framework;
 using NetCode;
 
-using Airlock.Render;
-
 namespace Airlock.Entities
 {
-    public abstract class Unit
+    public abstract class Unit : Entity
     {
         [Synchronisable]
-        public Vector2 Position { get; protected set; }
         public float Radius { get; protected set; }
 
-        public abstract void Render(Camera camera);
-
-        public virtual void Update()
+        public override void Render(Camera camera)
         {
-
+            Drawing.DrawCircle(camera.Batch, camera.Map(Position), camera.Scale * new Vector2(Radius * 2), 0, Color.Red);
         }
     }
 }

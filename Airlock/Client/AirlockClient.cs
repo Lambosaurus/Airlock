@@ -9,6 +9,8 @@ using Airlock.Map;
 using Airlock.Render;
 using Airlock.Entities;
 
+using Microsoft.Xna.Framework;
+
 namespace Airlock.Client
 {
     public class AirlockClient
@@ -16,6 +18,8 @@ namespace Airlock.Client
         public NetworkClient Network;
         public OutgoingSyncPool ClientContent;
         public IncomingSyncPool MapContent;
+
+        public PlayerMotionRequest MotionRequest;
 
         public AirlockClient(IPAddress address, int destport, int srcport )
         {
@@ -30,11 +34,13 @@ namespace Airlock.Client
             Network.Attach(ClientContent);
 
             Network.SetState(NetworkClient.ConnectionState.Open);
+            MotionRequest = new PlayerMotionRequest();
+            ClientContent.AddEntity(MotionRequest);
         }
 
         private double SyncTimer = 0;
 
-        public void Update(double elapsed)
+        public void Update(float elapsed)
         {
             SyncTimer += elapsed;
             if (SyncTimer > AirlockServer.SynchPeriod)
@@ -43,6 +49,8 @@ namespace Airlock.Client
                 MapContent.Synchronise();
             }
 
+            MotionRequest.Position += new Vector2(40, 0) * elapsed;
+
             ClientContent.Synchronise();
             Network.Update();
             MapContent.Synchronise();
@@ -50,14 +58,16 @@ namespace Airlock.Client
 
         public void Render(Camera camera)
         {
+            long timestamp = NetTime.Now();
             foreach ( SyncHandle handle in MapContent.Handles )
             {
                 if (handle.Obj is MapRoom room)
                 {
                     room.Render(camera);
                 }
-                if (handle.Obj is Unit unit)
+                if (handle.Obj is Entity unit)
                 {
+                    unit.Predict(timestamp);
                     unit.Render(camera);
                 }
             }

@@ -15,18 +15,19 @@ namespace Airlock.Map
     public class MapRoom
     {
         [Synchronisable]
-        public Point Origin { get; private set; }
+        public Point2 Origin { get; private set; }
         [Synchronisable]
-        public Point Size { get; private set; }
+        public Point2 Size { get; private set; }
+        public Point2 End { get { return Origin + Size; } }
 
         public Vector2 Center { get { return Origin.ToVector2() + Size.ToVector2() / 2; } }
-        public int RoomID { get; set; }
+        public ushort RoomID { get; set; }
 
         public MapRoom()
         {
         }
 
-        public MapRoom(Point origin, Point size)
+        public MapRoom(Point2 origin, Point2 size)
         {
             Origin = origin;
             Size = size;

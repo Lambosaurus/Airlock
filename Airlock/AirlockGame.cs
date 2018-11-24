@@ -8,6 +8,7 @@ using Airlock.Server;
 using Airlock.Client;
 using Airlock.Render;
 using System;
+using NetCode;
 
 namespace Airlock
 {
@@ -65,6 +66,7 @@ namespace Airlock
             WorldCamera = new Camera(spriteBatch, Resolution.ToVector2());
             
             LastKeys = Keyboard.GetState();
+            NetTime.Realtime = false;
         }
 
         /// <summary>
@@ -84,8 +86,9 @@ namespace Airlock
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            double now = NetCode.NetTime.Seconds();
-            double elapsed = now - LastUpdateTime;
+            NetTime.Advance(1000.0 / 60.0);
+            double now = NetTime.Seconds();
+            float elapsed = (float)(now - LastUpdateTime);
             LastUpdateTime = now;
             KeyboardState keys = Keyboard.GetState();
 

@@ -10,13 +10,13 @@ using NetCode.Util;
 
 namespace Airlock.Util
 {
-    [EnumerateSyncField(typeof(Point))]
-    public class SynchronisablePoint : SynchronisableField
+    [EnumerateSyncField(typeof(Point2))]
+    public class SynchronisablePoint2 : SynchronisableField
     {
-        private Point value;
-        public override void SetValue(object new_value) { value = (Point)new_value; }
+        private Point2 value;
+        public override void SetValue(object new_value) { value = (Point2)new_value; }
         public override object GetValue() { return value; }
-        public override bool ValueEqual(object new_value) { return (Point)new_value == value; }
+        public override bool ValueEqual(object new_value) { return (Point2)new_value == value; }
         public override int WriteToBufferSize() { return sizeof(short) * 2; }
         public override void Write(byte[] data, ref int index)
         {

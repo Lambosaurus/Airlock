@@ -14,41 +14,49 @@ namespace Airlock.Map
     public class MapGrid
     {
         public const int TileSize = 80;
-        protected Dictionary<int, MapRoom> RoomDict;
+        protected Dictionary<ushort, MapRoom> RoomDict;
         public IEnumerable<MapRoom> Rooms { get { return RoomDict.Values; } }
         
         public MapGrid()
         {
-            RoomDict = new Dictionary<int, MapRoom>();
+            RoomDict = new Dictionary<ushort, MapRoom>();
         }
 
-        private int LastFreeRoomID = 0;
-        private int GetNextFreeRoomID()
+        private ushort LastFreeRoomID = 0;
+        private ushort GetNextFreeRoomID()
         {
-            int id = LastFreeRoomID++;
+            ushort id = LastFreeRoomID++;
             while( RoomDict.ContainsKey(LastFreeRoomID) ) { LastFreeRoomID++; }
             return id;
         }
 
-        private int[,] HitMesh;
-        Point HitMeshCenter;
+        private ushort[,] HitMesh;
+        Point2 HitMeshOffset;
         private void BuildMesh()
         {
-            Point min = new Point(0, 0);
-            Point max = new Point(0,0);
+            Point2 min = new Point2(0, 0);
+            Point2 max = new Point2(0, 0);
             foreach (MapRoom room in Rooms)
             {
                 if (room.Origin.X < min.X ) { min.X = room.Origin.X; }
                 if (room.Origin.Y < min.Y) { min.Y = room.Origin.Y; }
-                if (room.Origin.X + room.Size.X > max.X) { min.X = room.Origin.X + room.Size.X; }
-                if (room.Origin.Y + room.Size.Y > max.Y) { min.Y = room.Origin.Y + room.Size.Y; }
+                if (room.End.X > max.X) { max.X = room.End.X; }
+                if (room.End.Y > max.Y) { max.Y = room.End.Y; }
             }
 
-            int dx = max.X - min.X;
-            int dy = max.Y - min.Y;
+            HitMesh = new ushort[max.X - min.X, max.Y - min.Y];
+            HitMeshOffset = -min;
 
-            HitMeshCenter = new Point(-min.X, -min.Y);
-
+            foreach ( MapRoom room in Rooms )
+            {
+                for( int x = room.Origin.X; x < room.End.X; x++)
+                {
+                    for (int y = room.Origin.Y; y < room.End.Y; y++)
+                    {
+                        HitMesh[x + HitMeshOffset.X, y + HitMeshOffset.Y] = room.RoomID;
+                    }
+                }
+            }
         }
         
         public void AddRoom( MapRoom room )
@@ -65,11 +73,16 @@ namespace Airlock.Map
         public static MapGrid StartingMap()
         {
             MapGrid grid = new MapGrid();
-            grid.AddRoom(new MapRoom(new Point(-4, -2), new Point(3, 4)));
-            grid.AddRoom(new MapRoom(new Point(0, 0), new Point(2, 2)));
-            grid.AddRoom(new MapRoom(new Point(-1, 0), new Point(1, 1)));
-            grid.AddRoom(new MapRoom(new Point(1, -3), new Point(1, 3)));
-            grid.AddRoom(new MapRoom(new Point(2, -4), new Point(3, 3)));
+            MapRoom[] newRooms = new MapRoom[]
+            {
+                new MapRoom(new Point2(-4, -2), new Point2(3, 4)),
+                new MapRoom(new Point2(0, 0), new Point2(2, 2)),
+                new MapRoom(new Point2(-1, 0), new Point2(1, 1)),
+                new MapRoom(new Point2(1, -3), new Point2(1, 3)),
+                new MapRoom(new Point2(2, -4), new Point2(3, 3))
+            };
+            foreach (MapRoom room in newRooms) { grid.AddRoom(room); }
+            grid.BuildMesh();
             return grid;
         }
 
