@@ -1,4 +1,5 @@
-﻿using Airlock.Server;
+﻿using System;
+using Airlock.Server;
 using NetCode;
 using NetCode.Connection;
 using NetCode.Connection.UDP;
@@ -22,6 +23,15 @@ namespace Airlock.Client
 
         public PlayerMotionRequest MotionRequest;
         public ClientInputs Inputs;
+
+        [Flags]
+        public enum DebugStateFlags
+        {
+            None        = 0,
+            Network     = 1,
+        };
+
+        public DebugStateFlags DebugState = DebugStateFlags.None;
 
         public AirlockClient(IPAddress address, int destport, int srcport )
         {
@@ -66,6 +76,11 @@ namespace Airlock.Client
 
             MotionRequest.Velocity = Inputs.GetWASDVector() * 120f;
             MotionRequest.Position += MotionRequest.Velocity * elapsed;
+
+            if (Inputs.KeyPressed(Keys.F1))
+            {
+                DebugState ^= DebugStateFlags.Network;
+            }
         }
 
         public void Render(Camera camera)
@@ -82,6 +97,26 @@ namespace Airlock.Client
                     unit.Predict(timestamp);
                     unit.Render(camera);
                 }
+            }
+
+            if ((DebugState & DebugStateFlags.Network) != 0)
+            {
+                ConnectionStats stats = Network.Connection.Stats;
+
+                string text = string.Format(
+                      "Status : {0}\n"
+                    + "Latency: {1}ms\n"
+                    + "Loss   : {2}%\n"
+                    + "Up     : {3}\n"
+                    + "Down   : {4}\n",
+                    Network.Connection.ConnectionStatus,
+                    stats.Latency,
+                    (int)(stats.PacketLoss * 100),
+                    NetCode.Util.Primitive.SIFormat(stats.BytesSent.PerSecond, "B/s"),
+                    NetCode.Util.Primitive.SIFormat(stats.BytesRecieved.PerSecond, "B/s")
+                    );
+
+                Drawing.DrawString(camera.Batch, text, new Vector2(20, 20), Color.White);
             }
         }
 
