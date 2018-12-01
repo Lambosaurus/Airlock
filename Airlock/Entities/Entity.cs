@@ -30,13 +30,7 @@ namespace Airlock.Entities
             Velocity = NetVelocity;
             Position = NetPosition + (NetVelocity * ((timestamp - NetTimestamp) / 1000f));
         }
-
-        public void SetPosition( Vector2 position )
-        {
-            Position = position;
-            UpdateNetMotion(NetTime.Now());
-        }
-
+        
         public void UpdateNetMotion(long timestamp)
         {
             NetPosition = Position;

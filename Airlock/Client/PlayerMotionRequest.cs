@@ -14,5 +14,8 @@ namespace Airlock.Client
     {
         [Synchronisable]
         public Vector2 Position { get; set; }
+
+        [Synchronisable]
+        public Vector2 Velocity { get; set; }
     }
 }

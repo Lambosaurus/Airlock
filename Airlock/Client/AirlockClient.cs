@@ -10,6 +10,7 @@ using Airlock.Render;
 using Airlock.Entities;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Airlock.Client
 {
@@ -20,6 +21,7 @@ namespace Airlock.Client
         public IncomingSyncPool MapContent;
 
         public PlayerMotionRequest MotionRequest;
+        public ClientInputs Inputs;
 
         public AirlockClient(IPAddress address, int destport, int srcport )
         {
@@ -36,6 +38,8 @@ namespace Airlock.Client
             Network.SetState(NetworkClient.ConnectionState.Open);
             MotionRequest = new PlayerMotionRequest();
             ClientContent.AddEntity(MotionRequest);
+
+            Inputs = new ClientInputs();
         }
 
         private double SyncTimer = 0;
@@ -49,11 +53,19 @@ namespace Airlock.Client
                 MapContent.Synchronise();
             }
 
-            MotionRequest.Position += new Vector2(40, 0) * elapsed;
-
+            HandleInputs(elapsed);
+            
             ClientContent.Synchronise();
             Network.Update();
             MapContent.Synchronise();
+        }
+
+        public void HandleInputs(float elapsed)
+        {
+            Inputs.Update();
+
+            MotionRequest.Velocity = Inputs.GetWASDVector() * 120f;
+            MotionRequest.Position += MotionRequest.Velocity * elapsed;
         }
 
         public void Render(Camera camera)

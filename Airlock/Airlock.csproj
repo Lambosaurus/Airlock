@@ -44,6 +44,7 @@
     <Compile Include="AirlockGame.cs" />
     <Compile Include="AirlockSettings.cs" />
     <Compile Include="Client\AirlockClient.cs" />
+    <Compile Include="Client\ClientInputs.cs" />
     <Compile Include="Client\PlayerMotionRequest.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Unit.cs" />

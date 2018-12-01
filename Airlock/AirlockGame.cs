@@ -27,7 +27,6 @@ namespace Airlock
         AirlockSettings Settings;
 
         private double LastUpdateTime = 0.0f;
-        KeyboardState LastKeys;
 
         public AirlockGame()
         {
@@ -65,7 +64,6 @@ namespace Airlock
             Client = new AirlockClient(IPAddress.Parse("127.0.0.1"), 11002, 11003);
             WorldCamera = new Camera(spriteBatch, Resolution.ToVector2());
             
-            LastKeys = Keyboard.GetState();
             NetTime.Realtime = false;
         }
 
@@ -90,7 +88,6 @@ namespace Airlock
             double now = NetTime.Seconds();
             float elapsed = (float)(now - LastUpdateTime);
             LastUpdateTime = now;
-            KeyboardState keys = Keyboard.GetState();
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
@@ -102,7 +99,6 @@ namespace Airlock
             Server.Update(elapsed);
             Client.Update(elapsed);
             
-            LastKeys = keys;
             base.Update(gameTime);
         }
 

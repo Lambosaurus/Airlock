@@ -105,7 +105,7 @@ namespace Airlock.Server
         {
             client.Network.Attach(MapContent);
 
-            UnitPlayer player = new UnitPlayer( new Vector2(0,0));
+            UnitPlayer player = new UnitPlayer( new Vector2(0,0), Color.Red);
             client.SpawnPlayer(player);
             AddUnit(player);
 

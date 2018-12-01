@@ -38,9 +38,12 @@ namespace Airlock.Server
 
             foreach (SyncHandle handle in ClientContent.Handles)
             {
-                if (handle.Obj is PlayerMotionRequest request)
+                if (handle.Updated)
                 {
-                    Player.SetPosition(request.Position);
+                    if (handle.Obj is PlayerMotionRequest request)
+                    {
+                        Player.UpdateWithMotionRequest(request);
+                    }
                 }
             }
         }

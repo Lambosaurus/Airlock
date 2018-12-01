@@ -10,6 +10,8 @@ namespace Airlock.Util
     {
         private static Random Rand;
 
+        public const float InvRootTwo = 0.7071067811865475f;
+
         static Fmath()
         {
             Rand = new Random();
