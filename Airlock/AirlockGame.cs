@@ -1,14 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Net;
+using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Net;
+using NetCode;
 
 using Airlock.Util;
 using Airlock.Server;
 using Airlock.Client;
 using Airlock.Render;
-using System;
-using NetCode;
 
 namespace Airlock
 {
@@ -91,13 +93,13 @@ namespace Airlock
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
-                Server.Close();
+                if (Server != null) { Server.Close(); }
                 Client.Close();
                 Exit();
             }
-            
-            Server.Update(elapsed);
-            Client.Update(elapsed);
+
+            if (Server != null) { Server.Update(elapsed); }
+            Client.Update(WorldCamera, elapsed);
             
             base.Update(gameTime);
         }

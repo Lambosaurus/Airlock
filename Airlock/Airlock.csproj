@@ -46,6 +46,7 @@
     <Compile Include="Client\AirlockClient.cs" />
     <Compile Include="Client\ClientInputs.cs" />
     <Compile Include="Client\PlayerMotionRequest.cs" />
+    <Compile Include="Entities\DroppedItem.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Unit.cs" />
     <Compile Include="Entities\UnitPlayer.cs" />
@@ -90,7 +91,9 @@
       <Name>NetCode</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Items\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

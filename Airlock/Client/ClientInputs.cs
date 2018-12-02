@@ -13,18 +13,45 @@ namespace Airlock.Client
     public class ClientInputs
     {
         public KeyboardState KeyState;
-        KeyboardState LastKeys;
-        
+        private KeyboardState LastKeys;
+
+        public Vector2 Cursor { get { return MouseState.Position.ToVector2(); } }
+        public MouseButtons MouseButtonState;
+        public MouseButtons LastMouseButtonState;
+        public MouseState MouseState;
+
+        [Flags]
+        public enum MouseButtons
+        {
+            None    = 0,
+            Left    = 1,
+            Right   = 2, 
+            Middle  = 4
+        }
+
         public ClientInputs()
         {
             KeyState = Keyboard.GetState();
             LastKeys = KeyState;
+            MouseState = Mouse.GetState();
+            MouseButtonState = GetMouseButtonsStates(MouseState);
+        }
+
+        private MouseButtons GetMouseButtonsStates(MouseState state)
+        {
+            return (MouseButtons)(((int)state.LeftButton   << 0)
+                                + ((int)state.RightButton  << 1)
+                                + ((int)state.MiddleButton << 2));
         }
 
         public void Update()
         {
             LastKeys = KeyState;
             KeyState = Keyboard.GetState();
+            MouseState = Mouse.GetState();
+            LastMouseButtonState = MouseButtonState;
+            MouseButtonState = GetMouseButtonsStates(MouseState);
+            
         }
 
         public bool KeyPressed(Keys key)
@@ -40,6 +67,21 @@ namespace Airlock.Client
         public bool KeyReleased(Keys key)
         {
             return !KeyState.IsKeyDown(key) && LastKeys.IsKeyDown(key);
+        }
+
+        public bool MouseButtonPressed(MouseButtons button)
+        {
+            return (MouseButtonState & (~LastMouseButtonState) & button) != 0;
+        }
+
+        public bool MouseButtonReleased(MouseButtons button)
+        {
+            return (~MouseButtonState & (LastMouseButtonState) & button) != 0;
+        }
+
+        public bool MouseButtonHeld(MouseButtons button)
+        {
+            return (MouseButtonState & button) != 0;
         }
 
         public Vector2 GetWASDVector(bool normalise = true)

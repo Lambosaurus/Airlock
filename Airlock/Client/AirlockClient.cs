@@ -29,6 +29,8 @@ namespace Airlock.Client
 
         private MapGrid Grid;
 
+        private Entity EntityUnderMouse = null;
+
         [Flags]
         public enum DebugStateFlags
         {
@@ -61,7 +63,7 @@ namespace Airlock.Client
 
         private double SyncTimer = 0;
 
-        public void Update(float elapsed)
+        public void Update(Camera camera, float elapsed)
         {
             SyncTimer += elapsed;
             if (SyncTimer > AirlockServer.SynchPeriod)
@@ -70,7 +72,7 @@ namespace Airlock.Client
                 ClientContent.Synchronise();
             }
 
-            HandleInputs(elapsed);
+            HandleInputs(camera, elapsed);
             
             Network.Update();
             MapContent.Synchronise();
@@ -91,7 +93,7 @@ namespace Airlock.Client
             }
         }
 
-        public void HandleInputs(float elapsed)
+        public void HandleInputs(Camera camera, float elapsed)
         {
             Inputs.Update();
 
@@ -105,6 +107,32 @@ namespace Airlock.Client
             {
                 DebugState ^= DebugStateFlags.Network;
             }
+
+            Vector2 cursor = camera.InverseMap(Inputs.Cursor);
+            if (EntityUnderMouse != null)
+            {
+                if (!EntityUnderMouse.IsPointOver(cursor))
+                {
+                    EntityUnderMouse.MouseOver = false;
+                    EntityUnderMouse = null;
+                }
+            }
+            foreach ( SyncHandle handle in MapContent.Handles )
+            {
+                if (handle.Obj is Entity entity)
+                {
+                    if (entity.IsPointOver(cursor))
+                    {
+                        if (EntityUnderMouse != null)
+                        {
+                            EntityUnderMouse.MouseOver = false;
+                        }
+                        entity.MouseOver = true;
+                        EntityUnderMouse = entity;
+                        break;
+                    }
+                }
+            }
         }
 
         public void Render(Camera camera)
@@ -115,10 +143,10 @@ namespace Airlock.Client
 
             foreach ( SyncHandle handle in MapContent.Handles )
             {
-                if (handle.Obj is Entity unit)
+                if (handle.Obj is Entity entity)
                 {
-                    unit.Predict(timestamp);
-                    unit.Render(camera);
+                    entity.Predict(timestamp);
+                    entity.Render(camera);
                 }
             }
             
@@ -127,12 +155,15 @@ namespace Airlock.Client
                 ConnectionStats stats = Network.Connection.Stats;
 
                 string text = string.Format(
-                      "Status : {0}\n"
-                    + "Latency: {1}ms\n"
-                    + "Loss   : {2}%\n"
-                    + "Up     : {3}\n"
-                    + "Down   : {4}\n",
-                    Network.Connection.ConnectionStatus,
+                      "Status : {0}{1}\n"
+                    + "Latency: {2}ms\n"
+                    + "Loss   : {3}%\n"
+                    + "Up     : {4}\n"
+                    + "Down   : {5}\n",
+                    Network.State,
+                        Network.State == NetworkClient.ConnectionState.Closed
+                        ? string.Format(" - {0}", Network.Connection.ConnectionStatus)
+                        : "",
                     stats.Latency,
                     (int)(stats.PacketLoss * 100),
                     NetCode.Util.Primitive.SIFormat(stats.BytesSent.PerSecond, "B/s"),

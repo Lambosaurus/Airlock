@@ -35,7 +35,7 @@ namespace Airlock.Render
 
         public Vector2 InverseMap(Vector2 point)
         {
-            return ((point - Resolution/2f) / Scale) + Position;
+            return (point / Scale) - MappingOrigin;
         }
 
         protected void BuildMap()

@@ -16,10 +16,15 @@ namespace Airlock.Entities
         public Vector2 NetVelocity { get; protected set; }
         [Synchronisable(SyncFlags.Timestamp)]
         public long NetTimestamp { get; protected set; }
-        
+
+        [Synchronisable]
+        public float Radius { get; protected set; }
+
         public Vector2 Position { get; protected set; }
         public Vector2 Velocity { get; protected set; }
 
+        public bool MouseOver { get; set; } = false;
+        
         public virtual void Update(float elapsed)
         {
             Position += Velocity * elapsed;
@@ -53,6 +58,15 @@ namespace Airlock.Entities
                 newVelocity.Y = 0;
             }
             Velocity = newVelocity;
+        }
+
+        public virtual bool IsPointOver( Vector2 point )
+        {
+            Vector2 delta = point - Position;
+            return delta.X > -Radius
+                && delta.X < Radius
+                && delta.Y > -Radius
+                && delta.Y < Radius;
         }
 
         public abstract void Render(Camera camera);

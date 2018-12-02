@@ -29,8 +29,8 @@ namespace Airlock.Server
         private NetDefinitions NetDefs;
 
         private MapGrid Grid;
-        public List<Unit> Units;
-        
+        public List<Entity> Entities;
+
         public AirlockServer( int port )
         {
             Server = new UDPServer(port);
@@ -41,8 +41,10 @@ namespace Airlock.Server
             NetDefs.LoadEntityTypes();
             MapContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.MapContent);
 
-            Units = new List<Unit>();
+            Entities = new List<Entity>();
             Grid = MapGrid.StartingMap();
+
+            AddEntity(new DroppedItem( new Vector2(200,-200) ));
 
             foreach (MapRoom room in Grid.Rooms)
             {
@@ -50,24 +52,28 @@ namespace Airlock.Server
             }
         }
 
-        public void AddUnit(Unit unit)
+        public void AddEntity(Entity entity)
         {
-            Units.Add(unit);
-            MapContent.AddEntity(unit);
+            Entities.Add(entity);
+            MapContent.AddEntity(entity);
         }
 
-        public void RemoveUnit(Unit unit)
+        public void RemoveEntity(Entity entity)
         {
-            Units.Remove(unit);
-            MapContent.GetHandleByObject(unit).State = SyncHandle.SyncState.Deleted;
+            Entities.Remove(entity);
+            MapContent.GetHandleByObject(entity).State = SyncHandle.SyncState.Deleted;
         }
 
         public void Update( float elapsed )
         {
-            foreach (Unit unit in Units )
+            foreach (Entity entity in Entities )
             {
-                unit.Update(elapsed);
-                Grid.StaticCollide(unit);
+                entity.Update(elapsed);
+
+                if (entity is Unit unit)
+                {
+                    Grid.StaticCollide(unit);
+                }
             }
 
             UDPFeed newFeed = Server.RecieveConnection();
@@ -106,9 +112,15 @@ namespace Airlock.Server
         {
             client.Network.Attach(MapContent);
 
-            UnitPlayer player = new UnitPlayer( new Vector2(0,0), Color.Red);
+            Color color;
+            if (Clients.Count == 0) { color = Color.Red; }
+            else if (Clients.Count == 1) { color = Color.Blue; }
+            else if (Clients.Count == 2) { color = Color.Lime; }
+            else { color = Color.Yellow; }
+            
+            UnitPlayer player = new UnitPlayer( new Vector2(0,0), color);
             client.SpawnPlayer(player);
-            AddUnit(player);
+            AddEntity(player);
 
             Clients.Add(client);
         }
@@ -119,7 +131,7 @@ namespace Airlock.Server
 
             if (client.Player != null)
             {
-                RemoveUnit(client.Player);
+                RemoveEntity(client.Player);
             }
 
             Clients.Remove(client);

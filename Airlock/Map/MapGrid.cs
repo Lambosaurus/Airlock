@@ -14,7 +14,7 @@ namespace Airlock.Map
 {
     public class MapGrid
     {
-        public const int TileSize = 80;
+        public const int TileSize = 60;
         protected Dictionary<ushort, MapRoom> RoomDict;
         public IEnumerable<MapRoom> Rooms { get { return RoomDict.Values; } }
 
@@ -100,7 +100,7 @@ namespace Airlock.Map
         
         public bool Passable(Point2 pt)
         {
-            ushort roomID = HitGrid[pt.X + (TileSize/2), pt.Y + (TileSize/2)];
+            ushort roomID = HitGrid[pt.X + (GridSize/2), pt.Y + (GridSize / 2)];
             if (roomID != 0)
             {
                 return RoomDict[roomID].Passable();
@@ -111,7 +111,6 @@ namespace Airlock.Map
         public void StaticCollide(Unit unit)
         {
             Point2 point = PositionToGrid(unit.Position);
-
             Vector2 overlap = new Vector2(0, 0);
 
             if (Passable(point))
@@ -151,7 +150,7 @@ namespace Airlock.Map
             }
             else
             {
-                // Find nearest valid tile.
+                // Find nearest valid tile, and shunt us there.
             }
 
             if (!overlap.IsZero())

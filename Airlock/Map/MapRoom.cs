@@ -33,7 +33,7 @@ namespace Airlock.Map
 
         public void Render(Camera camera)
         {
-            Drawing.DrawSquare(camera.Batch, camera.Map(Center * MapGrid.TileSize), (Size.ToVector2() * MapGrid.TileSize * camera.Scale), 0, Color.LightGray);
+            Drawing.DrawSquare(camera.Batch, camera.Map(Center * MapGrid.TileSize), (Size.ToVector2() * MapGrid.TileSize * camera.Scale), 0, Color.Gray);
         }
 
         public bool Passable()
