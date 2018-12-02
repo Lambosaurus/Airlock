@@ -30,6 +30,11 @@ namespace Airlock.Util
             return new Vector2(X, Y);
         }
 
+        public Vector2 ToVector2(float scalar)
+        {
+            return new Vector2(X * scalar, Y * scalar);
+        }
+
         public override string ToString()
         {
             return string.Format("{0}, {1}", X, Y);

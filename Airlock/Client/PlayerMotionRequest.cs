@@ -7,15 +7,21 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using NetCode;
 
+using Airlock.Entities;
+
 namespace Airlock.Client
 {
     [EnumerateSynchEntity]
-    public class PlayerMotionRequest
+    public class PlayerMotionRequest : Unit
     {
-        [Synchronisable]
-        public Vector2 Position { get; set; }
+        public PlayerMotionRequest()
+        {
+            Radius = 15;
+        }
 
-        [Synchronisable]
-        public Vector2 Velocity { get; set; }
+        public void SetVelocity( Vector2 velocity )
+        {
+            Velocity = velocity;
+        }
     }
 }

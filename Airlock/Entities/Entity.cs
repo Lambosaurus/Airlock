@@ -38,6 +38,23 @@ namespace Airlock.Entities
             NetTimestamp = timestamp;
         }
 
+        public void StaticCollide( Vector2 overlap )
+        {
+            Vector2 newVelocity = Velocity;
+            Position -= overlap;
+            if ((overlap.X > 0 && Velocity.X > 0) ||
+                (overlap.X < 0 && Velocity.X < 0))
+            {
+                newVelocity.X = 0;
+            }
+            if ((overlap.Y > 0 && Velocity.Y > 0) ||
+                (overlap.Y < 0 && Velocity.Y < 0))
+            {
+                newVelocity.Y = 0;
+            }
+            Velocity = newVelocity;
+        }
+
         public abstract void Render(Camera camera);
     }
 }

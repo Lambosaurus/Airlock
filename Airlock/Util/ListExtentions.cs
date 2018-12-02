@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Xna.Framework;
+
 namespace Airlock.Util
 {
     public static class ListExtentions
@@ -14,6 +16,11 @@ namespace Airlock.Util
             {
                 action(list[i]);
             }
+        }
+
+        public static bool IsZero(this Vector2 value)
+        {
+            return (value.X == 0) && (value.Y == 0);
         }
     }
 }

@@ -62,7 +62,6 @@
     <Compile Include="Util\ListExtentions.cs" />
     <Compile Include="Util\NetcodeFields.cs" />
     <Compile Include="Util\Point2.cs" />
-    <Compile Include="Util\VectorBox.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

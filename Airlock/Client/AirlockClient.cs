@@ -1,11 +1,14 @@
 ﻿using System;
-using Airlock.Server;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+
 using NetCode;
 using NetCode.Connection;
 using NetCode.Connection.UDP;
 using NetCode.SyncPool;
-using System.Net;
 
+using Airlock.Server;
 using Airlock.Map;
 using Airlock.Render;
 using Airlock.Entities;
@@ -17,12 +20,14 @@ namespace Airlock.Client
 {
     public class AirlockClient
     {
-        public NetworkClient Network;
-        public OutgoingSyncPool ClientContent;
-        public IncomingSyncPool MapContent;
+        private NetworkClient Network;
+        private OutgoingSyncPool ClientContent;
+        private IncomingSyncPool MapContent;
 
-        public PlayerMotionRequest MotionRequest;
-        public ClientInputs Inputs;
+        private PlayerMotionRequest MotionRequest;
+        private ClientInputs Inputs;
+
+        private MapGrid Grid;
 
         [Flags]
         public enum DebugStateFlags
@@ -50,6 +55,8 @@ namespace Airlock.Client
             ClientContent.AddEntity(MotionRequest);
 
             Inputs = new ClientInputs();
+
+            Grid = new MapGrid();
         }
 
         private double SyncTimer = 0;
@@ -60,23 +67,40 @@ namespace Airlock.Client
             if (SyncTimer > AirlockServer.SynchPeriod)
             {
                 SyncTimer -= AirlockServer.SynchPeriod;
-                MapContent.Synchronise();
+                ClientContent.Synchronise();
             }
 
             HandleInputs(elapsed);
             
-            ClientContent.Synchronise();
             Network.Update();
             MapContent.Synchronise();
+            
+            foreach ( SyncHandle handle in MapContent.NewHandles )
+            {
+                if (handle.Obj is MapRoom room)
+                {
+                    Grid.AddRoom(room);
+                }
+            }
+            foreach ( SyncHandle handle in MapContent.RemovedHandles )
+            {
+                if (handle.Obj is MapRoom room)
+                {
+                    Grid.RemoveRoom(room);
+                }
+            }
         }
 
         public void HandleInputs(float elapsed)
         {
             Inputs.Update();
 
-            MotionRequest.Velocity = Inputs.GetWASDVector() * 120f;
-            MotionRequest.Position += MotionRequest.Velocity * elapsed;
-
+            MotionRequest.SetVelocity(Inputs.GetWASDVector() * 120f);
+            
+            MotionRequest.Update(elapsed);
+            Grid.StaticCollide(MotionRequest);
+            MotionRequest.UpdateNetMotion(NetTime.Now());
+            
             if (Inputs.KeyPressed(Keys.F1))
             {
                 DebugState ^= DebugStateFlags.Network;
@@ -86,19 +110,18 @@ namespace Airlock.Client
         public void Render(Camera camera)
         {
             long timestamp = NetTime.Now();
+            
+            Grid.Render(camera);
+
             foreach ( SyncHandle handle in MapContent.Handles )
             {
-                if (handle.Obj is MapRoom room)
-                {
-                    room.Render(camera);
-                }
                 if (handle.Obj is Entity unit)
                 {
                     unit.Predict(timestamp);
                     unit.Render(camera);
                 }
             }
-
+            
             if ((DebugState & DebugStateFlags.Network) != 0)
             {
                 ConnectionStats stats = Network.Connection.Stats;

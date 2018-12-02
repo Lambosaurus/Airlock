@@ -35,7 +35,7 @@ namespace Airlock.Server
         {
             Network.Update();
             ClientContent.Synchronise();
-
+            
             foreach (SyncHandle handle in ClientContent.Handles)
             {
                 if (handle.Updated)

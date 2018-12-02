@@ -30,9 +30,11 @@ namespace Airlock.Entities
 
         public void UpdateWithMotionRequest(PlayerMotionRequest request)
         {
+            long timestamp = NetTime.Now();
+            request.Predict(timestamp);
             Position = request.Position;
             Velocity = request.Velocity;
-            UpdateNetMotion(NetTime.Now());
+            UpdateNetMotion(timestamp);
         }
 
         public override void Render(Camera camera)

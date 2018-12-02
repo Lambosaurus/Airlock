@@ -16,6 +16,13 @@ namespace Airlock.Util
         {
             Rand = new Random();
         }
+
+        public static int Floor(float value)
+        {
+            int i = (int)value;
+            if (i > value) { i--; }
+            return i;
+        }
         
         public static Vector2 CosSin(float angle)
         {

@@ -29,7 +29,7 @@ namespace Airlock.Server
         private NetDefinitions NetDefs;
 
         private MapGrid Grid;
-        public List<Entity> Units;
+        public List<Unit> Units;
         
         public AirlockServer( int port )
         {
@@ -41,7 +41,7 @@ namespace Airlock.Server
             NetDefs.LoadEntityTypes();
             MapContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.MapContent);
 
-            Units = new List<Entity>();
+            Units = new List<Unit>();
             Grid = MapGrid.StartingMap();
 
             foreach (MapRoom room in Grid.Rooms)
@@ -50,13 +50,13 @@ namespace Airlock.Server
             }
         }
 
-        public void AddUnit(Entity unit)
+        public void AddUnit(Unit unit)
         {
             Units.Add(unit);
             MapContent.AddEntity(unit);
         }
 
-        public void RemoveUnit(Entity unit)
+        public void RemoveUnit(Unit unit)
         {
             Units.Remove(unit);
             MapContent.GetHandleByObject(unit).State = SyncHandle.SyncState.Deleted;
@@ -64,9 +64,10 @@ namespace Airlock.Server
 
         public void Update( float elapsed )
         {
-            foreach (Entity unit in Units )
+            foreach (Unit unit in Units )
             {
                 unit.Update(elapsed);
+                Grid.StaticCollide(unit);
             }
 
             UDPFeed newFeed = Server.RecieveConnection();
