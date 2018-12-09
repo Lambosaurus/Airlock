@@ -114,6 +114,12 @@ namespace Airlock
 
             WorldCamera.Batch.Begin(samplerState: SamplerState.PointClamp);
             Client.Render(WorldCamera);
+
+            if ((Client.DebugState & AirlockClient.DebugStateFlags.Shadow) != 0)
+            {
+                Server.ShadowRender(WorldCamera);
+            }
+
             WorldCamera.Batch.End();
 
             base.Draw(gameTime);

@@ -8,13 +8,14 @@ using Microsoft.Xna.Framework;
 using NetCode;
 
 using Airlock.Entities;
+using Airlock.Render;
 
 namespace Airlock.Client
 {
     [EnumerateSynchEntity]
-    public class PlayerMotionRequest : Unit
+    public class LocalPlayer : Unit
     {
-        public PlayerMotionRequest()
+        public LocalPlayer()
         {
             Radius = 15;
         }

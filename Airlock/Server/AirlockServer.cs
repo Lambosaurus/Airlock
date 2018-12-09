@@ -11,21 +11,25 @@ using NetCode.SyncPool;
 using Airlock.Util;
 using Airlock.Map;
 using Airlock.Entities;
+using Airlock.Render;
 
 namespace Airlock.Server
 {
     public class AirlockServer
     {
-        public enum SyncPoolID { MapContent, ClientContent }
+        public enum SyncPoolID {
+            WorldContent,
+            ClientContent,
+            ReturnContent,
+        }
 
         public const int MaxPlayers = 4;
-        public const double SynchPeriod = 1.0/20;
-        private double SyncTimer = 0;
+        private PeriodicTimer SyncTimer = new PeriodicTimer(1 / 20f);
         
         private UDPServer Server;
         private List<AirlockHostedClient> Clients;
 
-        private OutgoingSyncPool MapContent;
+        private OutgoingSyncPool WorldContent;
         private NetDefinitions NetDefs;
 
         private MapGrid Grid;
@@ -39,7 +43,7 @@ namespace Airlock.Server
 
             NetDefs = new NetDefinitions();
             NetDefs.LoadEntityTypes();
-            MapContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.MapContent);
+            WorldContent = new OutgoingSyncPool(NetDefs, (ushort)SyncPoolID.WorldContent);
 
             Entities = new List<Entity>();
             Grid = MapGrid.StartingMap();
@@ -48,20 +52,20 @@ namespace Airlock.Server
 
             foreach (MapRoom room in Grid.Rooms)
             {
-                MapContent.AddEntity(room);
+                WorldContent.AddEntity(room);
             }
         }
 
         public void AddEntity(Entity entity)
         {
             Entities.Add(entity);
-            MapContent.AddEntity(entity);
+            WorldContent.AddEntity(entity);
         }
 
         public void RemoveEntity(Entity entity)
         {
             Entities.Remove(entity);
-            MapContent.GetHandleByObject(entity).State = SyncHandle.SyncState.Deleted;
+            WorldContent.GetHandleByObject(entity).State = SyncHandle.SyncState.Deleted;
         }
 
         public void Update( float elapsed )
@@ -79,7 +83,7 @@ namespace Airlock.Server
             UDPFeed newFeed = Server.RecieveConnection();
             if (newFeed != null)
             {
-                AddClient(new AirlockHostedClient(NetDefs, new NetworkClient(newFeed)));
+                AddClient(new AirlockHostedClient(NetDefs, new NetworkClient(newFeed), WorldContent));
             }
 
             foreach(AirlockHostedClient client in Clients)
@@ -94,11 +98,9 @@ namespace Airlock.Server
                 }
             });
 
-            SyncTimer += elapsed;
-            if (SyncTimer > SynchPeriod)
+            if (SyncTimer.IsElapsed(elapsed))
             {
-                SyncTimer -= SynchPeriod;
-                MapContent.Synchronise();
+                WorldContent.Synchronise();
 
                 foreach (AirlockHostedClient client in Clients)
                 {
@@ -110,19 +112,30 @@ namespace Airlock.Server
 
         private void AddClient(AirlockHostedClient client)
         {
-            client.Network.Attach(MapContent);
+            client.Network.Attach(WorldContent);
 
             Color color;
-            if (Clients.Count == 0) { color = Color.Red; }
-            else if (Clients.Count == 1) { color = Color.Blue; }
-            else if (Clients.Count == 2) { color = Color.Lime; }
-            else { color = Color.Yellow; }
+            if (Clients.Count == 0) { color = Color.Blue; }
+            else if (Clients.Count == 1) { color = Color.Lime; }
+            else if (Clients.Count == 2) { color = Color.Yellow; }
+            else { color = Color.Red; }
             
             UnitPlayer player = new UnitPlayer( new Vector2(0,0), color);
             client.SpawnPlayer(player);
             AddEntity(player);
 
             Clients.Add(client);
+        }
+
+        public void ShadowRender( Camera camera )
+        {
+            foreach ( AirlockHostedClient client in Clients)
+            {
+                if (client.Player != null)
+                {
+                    client.Player.ShadowRender(camera);
+                }
+            }
         }
 
         private void DropClient(AirlockHostedClient client)

@@ -1,41 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-
+﻿using Airlock.Entities;
+using Airlock.Map;
+using Airlock.Render;
+using Airlock.Server;
+using Airlock.Util;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using NetCode;
 using NetCode.Connection;
 using NetCode.Connection.UDP;
 using NetCode.SyncPool;
-
-using Airlock.Server;
-using Airlock.Map;
-using Airlock.Render;
-using Airlock.Entities;
-
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using System;
+using System.Net;
 
 namespace Airlock.Client
 {
     public class AirlockClient
     {
         private NetworkClient Network;
-        private OutgoingSyncPool ClientContent;
-        private IncomingSyncPool MapContent;
+        private OutgoingSyncPool ReturnContent;
+        private IncomingSyncPool WorldContent;
+        private IncomingSyncPool ClientContent;
 
-        private PlayerMotionRequest MotionRequest;
+        private LocalPlayer LocalPlayer;
+        private ClientInfo ClientInfo;
         private ClientInputs Inputs;
 
         private MapGrid Grid;
 
         private Entity EntityUnderMouse = null;
 
+        private PeriodicTimer SyncTimer = new PeriodicTimer(1 / 20f);
+
         [Flags]
         public enum DebugStateFlags
         {
             None        = 0,
-            Network     = 1,
+            Network     = (1 << 0),
+            Shadow      = (1 << 1),
         };
 
         public DebugStateFlags DebugState = DebugStateFlags.None;
@@ -47,48 +48,56 @@ namespace Airlock.Client
             NetDefinitions netDefs = new NetDefinitions();
             netDefs.LoadEntityTypes();
 
-            MapContent = new IncomingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.MapContent);
-            ClientContent = new OutgoingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ClientContent);
-            Network.Attach(MapContent);
+            WorldContent = new IncomingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.WorldContent);
+            ReturnContent = new OutgoingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ReturnContent);
+            ClientContent = new IncomingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ClientContent);
+            ClientContent.LinkedPools.Add(WorldContent);
+            Network.Attach(WorldContent);
+            Network.Attach(ReturnContent);
             Network.Attach(ClientContent);
 
             Network.SetState(NetworkClient.ConnectionState.Open);
-            MotionRequest = new PlayerMotionRequest();
-            ClientContent.AddEntity(MotionRequest);
+            LocalPlayer = new LocalPlayer();
+            ReturnContent.AddEntity(LocalPlayer);
 
             Inputs = new ClientInputs();
 
             Grid = new MapGrid();
         }
-
-        private double SyncTimer = 0;
-
+        
         public void Update(Camera camera, float elapsed)
         {
-            SyncTimer += elapsed;
-            if (SyncTimer > AirlockServer.SynchPeriod)
+            if (SyncTimer.IsElapsed(elapsed))
             {
-                SyncTimer -= AirlockServer.SynchPeriod;
-                ClientContent.Synchronise();
+                ReturnContent.Synchronise();
             }
 
             HandleInputs(camera, elapsed);
             
             Network.Update();
-            MapContent.Synchronise();
+            WorldContent.Synchronise();
+            ClientContent.Synchronise();
             
-            foreach ( SyncHandle handle in MapContent.NewHandles )
+            foreach ( SyncHandle handle in WorldContent.NewHandles )
             {
                 if (handle.Obj is MapRoom room)
                 {
                     Grid.AddRoom(room);
                 }
             }
-            foreach ( SyncHandle handle in MapContent.RemovedHandles )
+            foreach ( SyncHandle handle in WorldContent.RemovedHandles )
             {
                 if (handle.Obj is MapRoom room)
                 {
                     Grid.RemoveRoom(room);
+                }
+            }
+
+            foreach (SyncHandle handle in ClientContent.NewHandles)
+            {
+                if (handle.Obj is ClientInfo info)
+                {
+                    ClientInfo = info;
                 }
             }
         }
@@ -97,15 +106,19 @@ namespace Airlock.Client
         {
             Inputs.Update();
 
-            MotionRequest.SetVelocity(Inputs.GetWASDVector() * 120f);
-            
-            MotionRequest.Update(elapsed);
-            Grid.StaticCollide(MotionRequest);
-            MotionRequest.UpdateNetMotion(NetTime.Now());
+            LocalPlayer.SetVelocity(Inputs.GetWASDVector() * 120f);
+
+            LocalPlayer.Update(elapsed);
+            Grid.StaticCollide(LocalPlayer);
+            LocalPlayer.UpdateNetMotion(NetTime.Now());
             
             if (Inputs.KeyPressed(Keys.F1))
             {
                 DebugState ^= DebugStateFlags.Network;
+            }
+            if (Inputs.KeyPressed(Keys.F2))
+            {
+                DebugState ^= DebugStateFlags.Shadow;
             }
 
             Vector2 cursor = camera.InverseMap(Inputs.Cursor);
@@ -117,7 +130,7 @@ namespace Airlock.Client
                     EntityUnderMouse = null;
                 }
             }
-            foreach ( SyncHandle handle in MapContent.Handles )
+            foreach ( SyncHandle handle in WorldContent.Handles )
             {
                 if (handle.Obj is Entity entity)
                 {
@@ -141,15 +154,24 @@ namespace Airlock.Client
             
             Grid.Render(camera);
 
-            foreach ( SyncHandle handle in MapContent.Handles )
+            foreach ( SyncHandle handle in WorldContent.Handles )
             {
                 if (handle.Obj is Entity entity)
                 {
-                    entity.Predict(timestamp);
-                    entity.Render(camera);
+                    if (ClientInfo?.Player != entity)
+                    {
+                        entity.Predict(timestamp);
+                        entity.Render(camera);
+                    }
                 }
             }
-            
+
+            if (LocalPlayer != null)
+            {
+                LocalPlayer.Predict(timestamp);
+                LocalPlayer.Render(camera);
+            }
+
             if ((DebugState & DebugStateFlags.Network) != 0)
             {
                 ConnectionStats stats = Network.Connection.Stats;
@@ -172,6 +194,7 @@ namespace Airlock.Client
 
                 Drawing.DrawString(camera.Batch, text, new Vector2(20, 20), Color.White);
             }
+
         }
 
         public void Close()

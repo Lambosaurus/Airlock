@@ -8,39 +8,54 @@ using NetCode.Connection;
 
 using Airlock.Entities;
 using Airlock.Client;
+using Airlock.Util;
 
 namespace Airlock.Server
 {
     public class AirlockHostedClient
     {
-        public NetworkClient Network;
-        public IncomingSyncPool ClientContent;
+        public NetworkClient Network { get; protected set; }
+        private IncomingSyncPool ReturnContent;
+        private OutgoingSyncPool ClientContent;
 
-        public UnitPlayer Player;
+        private ClientInfo ClientInfo;
+        public UnitPlayer Player { get; protected set; }
 
-        public AirlockHostedClient(NetDefinitions netDefs, NetworkClient client)
+        private PeriodicTimer SyncTimer = new PeriodicTimer(1 / 20f);
+
+        public AirlockHostedClient(NetDefinitions netDefs, NetworkClient client, OutgoingSyncPool worldContent)
         {
             Network = client;
-            ClientContent = new IncomingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ClientContent);
+            ReturnContent = new IncomingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ReturnContent);
+            ClientContent = new OutgoingSyncPool(netDefs, (ushort)AirlockServer.SyncPoolID.ClientContent);
+            ClientContent.LinkedPools.Add(worldContent);
+            Network.Attach(ReturnContent);
             Network.Attach(ClientContent);
             Network.SetState(NetworkClient.ConnectionState.Open);
+            ClientInfo = new ClientInfo();
+            ClientContent.AddEntity(ClientInfo);
         }
 
         public void SpawnPlayer(UnitPlayer player)
         {
             Player = player;
+            ClientInfo.Player = player;
         }
         
-        public void Update(double elapsed)
+        public void Update(float elapsed)
         {
+            if (SyncTimer.IsElapsed(elapsed))
+            {
+                ClientContent.Synchronise();
+            }
             Network.Update();
-            ClientContent.Synchronise();
+            ReturnContent.Synchronise();
             
-            foreach (SyncHandle handle in ClientContent.Handles)
+            foreach (SyncHandle handle in ReturnContent.Handles)
             {
                 if (handle.Updated)
                 {
-                    if (handle.Obj is PlayerMotionRequest request)
+                    if (handle.Obj is LocalPlayer request)
                     {
                         Player.UpdateWithMotionRequest(request);
                     }

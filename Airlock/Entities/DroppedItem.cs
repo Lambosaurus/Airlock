@@ -25,11 +25,11 @@ namespace Airlock.Entities
 
         public override void Render(Camera camera)
         {
+            Drawing.DrawSquare(camera.Batch, camera.Map(Position), camera.Scale * new Vector2(Radius * 2), 0, Color.Yellow);
             if (MouseOver)
             {
                 Drawing.DrawString(camera.Batch, "Item", camera.Map(Position), Color.White);
             }
-            Drawing.DrawSquare(camera.Batch, camera.Map(Position), camera.Scale * new Vector2(Radius * 2), 0, Color.Yellow);
         }
     }
 }

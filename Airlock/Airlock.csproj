@@ -45,7 +45,7 @@
     <Compile Include="AirlockSettings.cs" />
     <Compile Include="Client\AirlockClient.cs" />
     <Compile Include="Client\ClientInputs.cs" />
-    <Compile Include="Client\PlayerMotionRequest.cs" />
+    <Compile Include="Client\LocalPlayer.cs" />
     <Compile Include="Entities\DroppedItem.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Unit.cs" />
@@ -59,9 +59,11 @@
     <Compile Include="Server\AirlockHostedClient.cs" />
     <Compile Include="Server\AirlockServer.cs" />
     <Compile Include="Server\ClientDeclaration.cs" />
+    <Compile Include="Server\ClientInfo.cs" />
     <Compile Include="Util\Fmath.cs" />
     <Compile Include="Util\ListExtentions.cs" />
     <Compile Include="Util\NetcodeFields.cs" />
+    <Compile Include="Util\PeriodicTimer.cs" />
     <Compile Include="Util\Point2.cs" />
   </ItemGroup>
   <ItemGroup>

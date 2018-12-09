@@ -28,7 +28,7 @@ namespace Airlock.Entities
             PlayerColor = color;
         }
 
-        public void UpdateWithMotionRequest(PlayerMotionRequest request)
+        public void UpdateWithMotionRequest(LocalPlayer request)
         {
             long timestamp = NetTime.Now();
             request.Predict(timestamp);
@@ -40,6 +40,11 @@ namespace Airlock.Entities
         public override void Render(Camera camera)
         {
             Drawing.DrawCircle(camera.Batch, camera.Map(Position), camera.Scale * new Vector2(Radius * 2), 0, PlayerColor);
+        }
+
+        public void ShadowRender(Camera camera)
+        {
+            Drawing.DrawCircle(camera.Batch, camera.Map(Position), camera.Scale * new Vector2(Radius * 2), 0, PlayerColor * 0.33f);
         }
     }
 }
